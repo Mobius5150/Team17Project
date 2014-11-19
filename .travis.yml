@@ -23,5 +23,3 @@ android:
     - sys-img-armeabi-v7a-android-19
     #- sys-img-x86-android-19
 
-install: ant deps
-script: ant debug install halfcaff
