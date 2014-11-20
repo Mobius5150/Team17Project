@@ -200,6 +200,36 @@ public class LocalDataManager implements IDataSourceManager {
 	}
 	
 	/**
+	 * Set the current UserContext
+	 */
+	public void setUserContext(UserContext ctx) {
+		mUserContext = ctx;
+		mDataLock.lock();
+		// Update all of our current data items to be favorited if they are favorited in the user context
+		for (UniqueId id: ctx.getFavorites()) {
+			QAModel item = mItemRefById.get(id);
+			if (item != null && item instanceof QuestionItem) {
+				((QuestionItem)item).setFavorited();
+			}
+		}
+		// For each of our upvote items, mark hasUpvoted on it's parent
+		if (null != mData) {
+			for (QAModel item: mData) {
+				if (item instanceof UpvoteItem) {
+					UpvoteItem upvote = ((UpvoteItem)item);
+					if (upvote.getAuthor().equals(mUserContext.getUserName())) {
+						AuthoredTextItem parent = (AuthoredTextItem)mItemRefById.get(upvote.getParentItem());
+						if (parent != null) {
+							parent.setHaveUpvoted();
+						}
+					}
+				}
+			}
+		}
+		mDataLock.unlock();
+	}
+	
+	/**
 	 * Force a  load of the local data
 	 */
 	public void asyncLoadData() {
